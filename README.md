@@ -193,8 +193,8 @@ Specifies command what will be added to all command. Default is
 ### `$.quote`
 
 Specifies a function what will be used for escaping special characters in 
-command substitution. Default is [shq](https://www.npmjs.com/package/shq) 
-package.
+command substitution. Default is `singleArgument` from
+[shell_escape](https://deno.land/x/shell_escape) module.
 
 ### `$.verbose`
 
