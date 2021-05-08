@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S deno run --unstable --allow-run --allow-read --allow-env
 
 // Copyright 2021 Google LLC
 // 
