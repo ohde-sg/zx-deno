@@ -30,7 +30,7 @@ gives sensible defaults.
 ## Install
 
 ```bash
-deno install -A --unstable https://github.com/Minigugus/zx-deno/raw/main/zx.mjs
+deno install -A --unstable https://deno.land/x/zx_deno/mod.mjs
 ```
 
 Required permissions:
@@ -198,7 +198,7 @@ It's possible to use `$` and others with explicit import.
 
 ```js
 #!/usr/bin/env node
-import {$} from 'https://github.com/Minigugus/zx-deno/raw/main/zx.mjs'
+import {$} from 'https://deno.land/x/zx_deno/mod.mjs'
 await $`date`
 ```
 
