@@ -64,6 +64,7 @@ export async function $(pieces, ...args) {
       stdout += decoded
       combined += decoded
     }
+    child.stdout.close()
   })()
   let stderrPromise = (async function() {
     for await (const chunk of iter(child.stderr)) {
@@ -72,9 +73,11 @@ export async function $(pieces, ...args) {
       stderr += decoded
       combined += decoded
     }
+    child.stderr.close()
   })()
   const { success, code } = await child.status()
   await Promise.all([stdoutPromise, stderrPromise])
+  child.close()
   const output = new ProcessOutput({code, stdout, stderr, combined, __from})
   if (success)
     return output
