@@ -82,7 +82,7 @@ export async function $(pieces, ...args) {
 }
 
 $.verbose = true
-$.shell = undefined
+$.shell = '/bin/bash'
 $.cwd = undefined
 
 export function cd(path) {
