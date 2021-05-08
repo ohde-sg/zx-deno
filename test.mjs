@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-function assert(cond, msg) {
-  if (cond) return
-  console.error('Assertion failed')
-  if (msg) console.error(msg)
-  Deno.exit(1)
-}
+import {strict as assert} from 'https://deno.land/std@0.95.0/node/assert.ts'
 
 {
   let hello = await $`echo Error >&2; echo Hello`
@@ -72,3 +67,5 @@ function assert(cond, msg) {
   Deno.env.set('FOO', 'hi; exit 1')
   await $`echo $FOO`
 }
+
+console.log(colors.green('🍺 Success!'))

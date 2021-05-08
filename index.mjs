@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {iter} from 'https://deno.land/std@0.95.0/io/util.ts'
+import {readAll, iter} from 'https://deno.land/std@0.95.0/io/util.ts'
 import {existsSync} from 'https://deno.land/std@0.95.0/fs/exists.ts'
 import * as colors from 'https://deno.land/std@0.95.0/fmt/colors.ts'
 import {singleArgument as escape} from 'https://deno.land/x/shell_escape@1.0.0/index.ts'
@@ -37,7 +37,7 @@ let decoder = new TextDecoder();
 export async function $(pieces, ...args) {
   let __from = (new Error().stack.split('at ')[2]).trim()
   let cmd = pieces[0], i = 0
-  while (i < args.length) cmd += escape(substitute(args[i])) + pieces[++i]
+  while (i < args.length) cmd += $.quote(substitute(args[i])) + pieces[++i]
 
   if ($.verbose) console.log('$', colorize(cmd))
 
@@ -50,7 +50,7 @@ export async function $(pieces, ...args) {
   if (typeof $.cwd !== 'undefined') cwd = $.cwd
 
   let child = Deno.run({
-    cmd: [shell, '-c', cmd],
+    cmd: [shell, '-c', $.prefix + cmd],
     stdout: 'piped',
     stderr: 'piped',
     cwd,
@@ -82,7 +82,12 @@ export async function $(pieces, ...args) {
 }
 
 $.verbose = true
-$.shell = '/bin/bash'
+// Try `command`, should cover all Bourne-like shells.
+// Try `which`, should cover most other cases.
+// Try `type` command, if the rest fails.
+$.shell = `${await exec('command -v bash || which bash || type -p bash')}`.trim()
+$.prefix = 'set -euo pipefail;'
+$.quote = escape
 $.cwd = undefined
 
 export function cd(path) {
@@ -156,4 +161,14 @@ export class ProcessOutput {
   get __from() {
     return this.#__from
   }
+}
+
+async function exec(cmd) {
+  let proc = Deno.run({ cmd: ['/bin/sh', '-c', cmd], stdout: 'piped' })
+  let stdoutPromise = readAll(proc.stdout)
+  await proc.status()
+  const stdout = await stdoutPromise
+  proc.stdout.close()
+  proc.close()
+  return decoder.decode(stdout)
 }

@@ -63,8 +63,8 @@ Or via `zx` bin:
 zx ./script.mjs
 ```
 
-Then using `zx` bin or via shebang, all `$`, `cd`, `fetch`, etc 
-available without imports.
+When using `zx` via bin or shebang, all `$`, `cd`, `fetch`, etc 
+are available without imports.
 
 ### ``$`command` ``
 
@@ -179,11 +179,22 @@ await $`cd ${os.homedir()} && mkdir example`
 
 ### `$.shell`
 
-Specifies what shell is used. Default is `/bin/bash`.
+Specifies what shell is used. Default is `which bash`.
 
 ```js
 $.shell = '/usr/bin/bash'
 ```
+
+### `$.prefix`
+
+Specifies command what will be added to all command. Default is 
+`set -euo pipefail;`.
+
+### `$.quote`
+
+Specifies a function what will be used for escaping special characters in 
+command substitution. Default is [shq](https://www.npmjs.com/package/shq) 
+package.
 
 ### `$.verbose`
 
