@@ -14,15 +14,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+let env = Deno.env.toObject()
+
 let username = await question('What is your GitHub username? ')
 let token = await question('Do you have GitHub token in env? ', {
-  choices: Object.keys(process.env)
+  choices: Object.keys(env)
 })
 
 let headers = {}
-if (process.env[token]) {
+if (env[token]) {
   headers = {
-    Authorization: `token ${process.env[token]}`
+    Authorization: `token ${env[token]}`
   }
 }
 let res = await fetch(`https://api.github.com/users/${username}/repos`, {headers})

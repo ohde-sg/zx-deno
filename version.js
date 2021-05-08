@@ -12,4 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module.exports.version = require('./package.json').version
+export const version = JSON.parse(await Deno.readTextFile(new URL('./package.json', import.meta.url))).version

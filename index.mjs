@@ -12,19 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {existsSync} from 'fs'
-import {exec} from 'child_process'
-import {promisify} from 'util'
-import {createInterface} from 'readline'
-import {default as nodeFetch} from 'node-fetch'
-import chalk from 'chalk'
-import {default as escape} from 'shq'
+import {iter} from 'https://deno.land/std@0.95.0/io/util.ts'
+import {existsSync} from 'https://deno.land/std@0.95.0/fs/exists.ts'
+import * as colors from 'https://deno.land/std@0.95.0/fmt/colors.ts'
+import {singleArgument as escape} from 'https://deno.land/x/shell_escape@1.0.0/index.ts'
 
-export {chalk}
+export {colors}
 
 function colorize(cmd) {
   return cmd.replace(/^\w+\s/, substr => {
-    return chalk.greenBright(substr)
+    return colors.brightGreen(substr)
   })
 }
 
@@ -35,38 +32,53 @@ function substitute(arg) {
   return arg
 }
 
-export function $(pieces, ...args) {
+let decoder = new TextDecoder();
+
+export async function $(pieces, ...args) {
   let __from = (new Error().stack.split('at ')[2]).trim()
   let cmd = pieces[0], i = 0
   while (i < args.length) cmd += escape(substitute(args[i])) + pieces[++i]
 
   if ($.verbose) console.log('$', colorize(cmd))
 
-  return new Promise((resolve, reject) => {
-    let options = {
-      windowsHide: true,
-    }
-    if (typeof $.shell !== 'undefined') options.shell = $.shell
-    if (typeof $.cwd !== 'undefined') options.cwd = $.cwd
+  let options = {
+    windowsHide: true,
+  }
+  let shell = '/bin/sh'
+  let cwd = Deno.cwd()
+  if (typeof $.shell !== 'undefined') shell = $.shell
+  if (typeof $.cwd !== 'undefined') cwd = $.cwd
 
-    let child = exec('set -euo pipefail;' + cmd, options)
-    let stdout = '', stderr = '', combined = ''
-    child.stdout.on('data', data => {
-      if ($.verbose) process.stdout.write(data)
-      stdout += data
-      combined += data
-    })
-    child.stderr.on('data', data => {
-      if ($.verbose) process.stderr.write(data)
-      stderr += data
-      combined += data
-    })
-    child.on('exit', code => {
-      (code === 0 ? resolve : reject)(
-        new ProcessOutput({code, stdout, stderr, combined, __from})
-      )
-    })
+  let child = Deno.run({
+    cmd: [shell, '-c', cmd],
+    stdout: 'piped',
+    stderr: 'piped',
+    cwd,
+    env: Deno.env.toObject()
   })
+  let stdout = '', stderr = '', combined = ''
+  let stdoutPromise = (async function() {
+    for await (const chunk of iter(child.stdout)) {
+      const decoded = decoder.decode(chunk)
+      if ($.verbose) await Deno.stdout.write(chunk)
+      stdout += decoded
+      combined += decoded
+    }
+  })()
+  let stderrPromise = (async function() {
+    for await (const chunk of iter(child.stderr)) {
+      const decoded = decoder.decode(chunk)
+      if ($.verbose) await Deno.stderr.write(chunk)
+      stderr += decoded
+      combined += decoded
+    }
+  })()
+  const { success, code } = await child.status()
+  await Promise.all([stdoutPromise, stderrPromise])
+  const output = new ProcessOutput({code, stdout, stderr, combined, __from})
+  if (success)
+    return output
+  throw output
 }
 
 $.verbose = true
@@ -79,7 +91,7 @@ export function cd(path) {
     let __from = (new Error().stack.split('at ')[2]).trim()
     console.error(`cd: ${path}: No such directory`)
     console.error(`  at ${__from}`)
-    process.exit(1)
+    Deno.exit(1)
   }
   $.cwd = path
 }
@@ -93,16 +105,11 @@ export async function question(query, options) {
       return [hits.length ? hits : completions, line]
     }
   }
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-    completer,
-  })
-  const question = promisify(rl.question).bind(rl)
-  let answer = await question(query)
-  rl.close()
-  return answer
+  let answer = window.prompt(query) // TODO Use an API that supports completions
+  return answer ?? ''
 }
+
+const nodeFetch = window.fetch;
 
 export async function fetch(url, init) {
   if ($.verbose) {

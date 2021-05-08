@@ -16,8 +16,7 @@ function assert(cond, msg) {
   if (cond) return
   console.error('Assertion failed')
   if (msg) console.error(msg)
-  process.exit(1)
-
+  Deno.exit(1)
 }
 
 {
@@ -27,7 +26,7 @@ function assert(cond, msg) {
 }
 
 {
-  process.env.FOO = 'foo'
+  Deno.env.set('FOO', 'foo')
   let foo = await $`echo $FOO`
   assert(foo.stdout === 'foo\n')
 }
@@ -54,14 +53,14 @@ function assert(cond, msg) {
   try {
     await $`mkdir /tmp/${name}`
   } finally {
-    await fs.rmdir('/tmp/' + name)
+    fs.rmdirSync('/tmp/' + name)
   }
 }
 
 {
   let p
   try {
-    p = await $`cat /dev/not_found | sort`
+    p = await $`cat /dev/not_found`
   } catch (e) {
     console.log('Caught an exception -> ok')
     p = e
@@ -70,6 +69,6 @@ function assert(cond, msg) {
 }
 
 {
-  process.env.FOO = 'hi; exit 1'
+  Deno.env.set('FOO', 'hi; exit 1')
   await $`echo $FOO`
 }

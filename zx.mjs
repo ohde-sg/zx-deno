@@ -14,47 +14,47 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {join, basename} from 'path'
-import os, {tmpdir} from 'os'
-import {promises as fs} from 'fs'
-import {v4 as uuid} from 'uuid'
-import {$, cd, question, fetch, chalk, ProcessOutput} from './index.mjs'
+import {readAll} from 'https://deno.land/std@0.95.0/io/util.ts'
+import {join} from 'https://deno.land/std@0.95.0/path/mod.ts'
+import * as fs from 'https://deno.land/std@0.95.0/node/fs.ts';
+import * as os from 'https://deno.land/std@0.95.0/node/os.ts';
+import {$, cd, question, colors, fetch, ProcessOutput} from './index.mjs'
 import {version} from './version.js'
 
-Object.assign(global, {
+Object.assign(window, {
   $,
   cd,
   fetch,
   question,
-  chalk,
-  fs,
-  os,
+  colors,
+  fs: {...fs, ...fs.promises}, // FIXME Not all functions promisified
+  os
 })
 
 try {
-  let firstArg = process.argv[2]
+  let firstArg = Deno.args[0]
 
   if (['-v', '-V', '--version'].includes(firstArg)) {
     console.log(`zx version ${version}`)
-    process.exit(0)
+    Deno.exit(0)
   }
 
   if (typeof firstArg === 'undefined') {
     let ok = await scriptFromStdin()
     if (!ok) {
       console.log(`usage: zx <script>`)
-      process.exit(2)
+      Deno.exit(2)
     }
   } else if (firstArg.startsWith('http://') || firstArg.startsWith('https://')) {
-    await scriptFromHttp(firstArg)
+    await import(firstArg)
   } else {
-    await import(join(process.cwd(), firstArg))
+    await import(join(Deno.cwd(), firstArg))
   }
 
 } catch (p) {
   if (p instanceof ProcessOutput) {
     console.error('  at ' + p.__from)
-    process.exit(1)
+    Deno.exit(1)
   } else {
     throw p
   }
@@ -62,38 +62,14 @@ try {
 
 async function scriptFromStdin() {
   let script = ''
-  if (!process.stdin.isTTY) {
-    process.stdin.setEncoding('utf8')
-    for await (const chunk of process.stdin) {
-      script += chunk
-    }
+  if (!Deno.isatty(Deno.stdin.rid)) {
+    script = new TextDecoder().decode(await readAll(Deno.stdin))
 
     if (script.length > 0) {
-      let filepath = join(tmpdir(), uuid() + '.mjs')
-      await writeAndImport(filepath, script)
+      await import('data:application/javascript,' + encodeURIComponent(script))
       return true
     }
   }
   return false
 }
 
-async function scriptFromHttp(firstArg) {
-  let res = await fetch(firstArg)
-  if (!res.ok) {
-    console.error(`Error: Can't get ${firstArg}`)
-    process.exit(1)
-  }
-  let script = await res.text()
-  let filepath = join(tmpdir(), basename(firstArg))
-  await writeAndImport(filepath, script)
-}
-
-async function writeAndImport(filepath, script) {
-  await fs.mkdtemp(filepath)
-  try {
-    await fs.writeFile(filepath, script)
-    await import(filepath)
-  } finally {
-    await fs.rm(filepath)
-  }
-}

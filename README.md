@@ -1,5 +1,7 @@
 # 🐚 zx
 
+> A Deno version of https://github.com/google/zx
+
 ```js
 #!/usr/bin/env zx
 
@@ -22,14 +24,21 @@ Bash is great, but when it comes to writing scripts,
 people usually choose a more convenient programming language.
 JavaScript is a perfect choice, but standard Node.js library 
 requires additional hassle before using. `zx` package provides
-useful wrappers around `child_process`, escapes arguments and 
+useful wrappers around `Deno.run`, escapes arguments and 
 gives sensible defaults.
 
 ## Install
 
 ```bash
-npm i -g zx
+deno install --A --unstable https://github.com/Minigugus/zx-deno/raw/main/zx.mjs
 ```
+
+Required permissions:
+ * `--allow-run` to allow running commands
+ * `--allow-read` to `await import` the script to run
+ * `--allow-env` for subprocess to work correctly
+
+Not that scripts permissions inherits `zx` permissions
 
 ## Documentation
 
@@ -59,8 +68,7 @@ available without imports.
 
 ### ``$`command` ``
 
-Executes given string using `exec` function
-from `child_process` package and returns `Promise<ProcessOutput>`.
+Executes given string using `Deno.run` function and returns `Promise<ProcessOutput>`.
 
 ```js
 let count = parseInt(await $`ls -1 | wc -l`)
@@ -109,7 +117,7 @@ await $`pwd` // outputs /tmp
 
 ### `fetch()`
 
-This is a wrapper around [node-fetch](https://www.npmjs.com/package/node-fetch) package.
+The native `fetch()` function provided by `Deno`
 ```js
 let resp = await fetch('http://wttr.in')
 if (resp.ok) {
@@ -119,7 +127,7 @@ if (resp.ok) {
 
 ### `question()`
 
-This is a wrapper around [readline](https://nodejs.org/api/readline.html) package.
+This is a wrapper around `window.prompt`. As of now, the `option` parameter is ignored.
 
 ```ts
 type QuestionOptions = { choices: string[] }
@@ -132,7 +140,7 @@ Usage:
 ```js
 let username = await question('What is your username? ')
 let token = await question('Choose env variable: ', {
-  choices: Object.keys(process.env)
+  choices: Object.keys(Deno.env.toObject())
 })
 ```
 
@@ -140,17 +148,15 @@ let token = await question('Choose env variable: ', {
 
 ### `chalk` package
 
-The [chalk](https://www.npmjs.com/package/chalk) package available without 
-importing inside scripts.
+The [chalk](https://www.npmjs.com/package/chalk) package provided in the original `zx` package is replaced by the standard `https://deno.land/std/fmt/colors.ts` module
 
 ```js
-console.log(chalk.blue('Hello world!'))
+console.log(colors.blue('Hello world!'))
 ```
 
 ### `fs` package
 
-The [fs](https://nodejs.org/api/fs.html) package available without importing 
-inside scripts.
+The [fs](https://deno.land/std@0.95.0/node/fs.ts) module available without importing inside scripts.
 
 ```js
 let content = await fs.readFile('./package.json')
@@ -159,12 +165,12 @@ let content = await fs.readFile('./package.json')
 Promisified version imported by default. Same as if you write: 
 
 ```js
-import {promises as fs} from 'fs'
+import {promises as fs} from 'https://deno.land/std@0.95.0/node/fs.ts'
 ```
 
 ### `os` package
 
-The [os](https://nodejs.org/api/os.html) package available without importing
+The [os](https://deno.land/std@0.95.0/node/os.ts) package available without importing
 inside scripts.
 
 ```js
@@ -192,14 +198,14 @@ It's possible to use `$` and others with explicit import.
 
 ```js
 #!/usr/bin/env node
-import {$} from 'zx'
+import {$} from 'https://github.com/Minigugus/zx-deno/raw/main/zx.mjs'
 await $`date`
 ```
 
 ### Passing env variables
 
 ```js
-process.env.FOO = 'bar'
+Deno.env.set('FOO', 'bar')
 await $`echo $FOO`
 ```
 
@@ -214,5 +220,3 @@ zx https://medv.io/example-script.mjs
 ## License
 
 [Apache-2.0](LICENSE)
-
-Disclaimer: _This is not an officially supported Google product._
