@@ -12,4 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export const version = JSON.parse(await Deno.readTextFile(new URL('./package.json', import.meta.url))).version
+export let version = '(unknown)';
+
+try {
+  const pkgJSON = new URL('./package.json', import.meta.url);
+  if (import.meta.url.startsWith('file:'))
+    version = JSON.parse(await Deno.readTextFile(pkgJSON)).version
+  else
+    version = (await (await fetch(pkgJSON)).json()).version
+} catch {}
