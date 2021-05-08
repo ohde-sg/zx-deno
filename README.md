@@ -30,7 +30,7 @@ gives sensible defaults.
 ## Install
 
 ```bash
-deno install --A --unstable https://github.com/Minigugus/zx-deno/raw/main/zx.mjs
+deno install -A --unstable https://github.com/Minigugus/zx-deno/raw/main/zx.mjs
 ```
 
 Required permissions:
