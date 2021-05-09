@@ -15,7 +15,7 @@
 // limitations under the License.
 
 import {readAll} from 'https://deno.land/std@0.95.0/io/util.ts'
-import {join} from 'https://deno.land/std@0.95.0/path/mod.ts'
+import {resolve} from 'https://deno.land/std@0.95.0/path/mod.ts'
 import * as fs from 'https://deno.land/std@0.95.0/node/fs.ts';
 import * as os from 'https://deno.land/std@0.95.0/node/os.ts';
 import {$, cd, question, colors, fetch, ProcessOutput} from './index.mjs'
@@ -45,10 +45,10 @@ try {
       console.log(`usage: zx <script>`)
       Deno.exit(2)
     }
-  } else if (firstArg.startsWith('http://') || firstArg.startsWith('https://')) {
+  } else if (firstArg.startsWith('http://') || firstArg.startsWith('https://') || firstArg.startsWith('file:///')) {
     await import(firstArg)
   } else {
-    await import(join(Deno.cwd(), firstArg))
+    await import(resolve(Deno.cwd(), firstArg))
   }
 
 } catch (p) {
