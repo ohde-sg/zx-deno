@@ -4,7 +4,7 @@
 
 > :warning: As stated by the [zx author](https://github.com/google/zx/issues/24#issuecomment-841667224), zx won't try to support Deno, and therefore some API cannot be implemented properly (for instance `require` and other `exec` related features)
 >
-> If you really want Deno support, you should switch to another library, for instance https://github.com/Minigugus/bazx
+> If you really want Deno support, you should switch to another library, for instance [bazx](https://deno.land/x/bazx)
 
 ```js
 #!/usr/bin/env zx
