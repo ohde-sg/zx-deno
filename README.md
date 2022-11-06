@@ -1,3 +1,9 @@
+# Install
+
+```
+deno install -A --unstable -n zx_deno https://raw.githubusercontent.com/ohde-sg/zx-deno/main/mod.mjs
+```
+
 # 🐚 zx
 
 > A Deno version of https://github.com/google/zx
