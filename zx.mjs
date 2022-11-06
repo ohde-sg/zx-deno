@@ -16,6 +16,7 @@
 
 import {readAll} from 'https://deno.land/std@0.95.0/io/util.ts'
 import {resolve} from 'https://deno.land/std@0.95.0/path/mod.ts'
+import { toFileUrl } from "https://deno.land/std@0.146.0/path/mod.ts";
 import * as fs from 'https://deno.land/std@0.95.0/node/fs.ts';
 import * as os from 'https://deno.land/std@0.95.0/node/os.ts';
 import {$, cd, question, colors, fetch, ProcessOutput} from './index.mjs'
