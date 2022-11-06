@@ -48,7 +48,10 @@ try {
   } else if (firstArg.startsWith('http://') || firstArg.startsWith('https://') || firstArg.startsWith('file:///')) {
     await import(firstArg)
   } else {
-    await import(resolve(Deno.cwd(), firstArg))
+//     await import(resolve(Deno.cwd(), firstArg))
+    await import(
+      new URL(firstArg, toFileUrl(Deno.cwd()).href + "/").href
+    );
   }
 
 } catch (p) {
